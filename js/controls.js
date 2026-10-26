@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { playerState } from './state.js';
 
 const SPEED = 4.0;        // m/s
 const PLAYER_RADIUS = 0.35;
@@ -37,7 +38,7 @@ export function setupControls({ camera, domElement, overlay, flashlight, walls }
   const dir = new THREE.Vector3();
 
   function update(delta) {
-    if (!controls.isLocked) return;
+    if (!controls.isLocked || playerState.uiOpen) return; // ダイアログ中は移動不可
 
     dir.set(
       Number(keys.d) - Number(keys.a), // 右/左

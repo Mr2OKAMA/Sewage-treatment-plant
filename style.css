@@ -24,7 +24,43 @@ canvas {
   border-radius: 50%;
   pointer-events: none;
   z-index: 10;
+  transition: background 0.1s, transform 0.1s;
 }
+
+#crosshair.active {
+  background: #ffd34d;
+  box-shadow: 0 0 6px #ffd34d;
+  transform: scale(1.8);
+}
+
+#interact-prompt {
+  position: fixed;
+  top: calc(50% + 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffd34d;
+  font-size: 16px;
+  text-shadow: 0 0 4px #000;
+  pointer-events: none;
+  z-index: 10;
+  display: none;
+}
+
+#inventory {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  min-width: 140px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #555;
+  color: #bbb;
+  font-size: 14px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+#inventory .title { color: #777; margin-bottom: 4px; }
 
 #overlay {
   position: fixed;
@@ -40,3 +76,32 @@ canvas {
   cursor: pointer;
   z-index: 20;
 }
+
+/* --- 電話ダイアログ --- */
+#phone-ui {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 15;
+}
+
+#phone-ui.hidden { display: none; }
+
+.phone-box {
+  width: min(720px, 90vw);
+  margin-bottom: 8vh;
+  padding: 16px 20px;
+  background: #021a05;
+  border: 3px double #3cff6a;
+  color: #3cff6a;
+  font-size: 18px;
+  line-height: 1.7;
+  box-shadow: 0 0 20px rgba(60, 255, 106, 0.3);
+}
+
+.phone-title { border-bottom: 1px solid #3cff6a; margin-bottom: 10px; padding-bottom: 4px; }
+#phone-text { min-height: 5.1em; white-space: pre-wrap; }
+.phone-hint { text-align: right; font-size: 13px; opacity: 0.7; }

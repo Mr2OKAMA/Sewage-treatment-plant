@@ -15,8 +15,17 @@
   </script>
 </head>
 <body>
-  <div id="overlay">クリックで開始<br /><small>WASD: 移動 / マウス: 視点 / F: 懐中電灯 / Esc: 解除</small></div>
+  <div id="overlay">クリックで開始<br /><small>WASD: 移動 / マウス: 視点 / F: 懐中電灯 / E・左クリック: インタラクト / Esc: 解除</small></div>
   <div id="crosshair"></div>
+  <div id="interact-prompt"></div>
+  <div id="inventory"></div>
+  <div id="phone-ui" class="hidden">
+    <div class="phone-box">
+      <div class="phone-title">■ 通話中 ― ベテラン社員</div>
+      <div id="phone-text"></div>
+      <div class="phone-hint">[E / クリック] 次へ</div>
+    </div>
+  </div>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

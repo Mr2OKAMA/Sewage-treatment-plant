@@ -3,7 +3,9 @@ import { setupControls } from './controls.js';
 import { setupInteraction } from './interaction.js';
 import { PhoneUI } from './phone.js';
 import { addItem } from './inventory.js';
-import { gameState } from './state.js';
+import { gameState, playerState, ITEM_NAMES, saveCheckpoint } from './gameState.js';
+import { initGameOver } from './gameOver.js';
+import { setupEvents, PIT_STAIRS_BOX } from './events.js';
 
 // --- Renderer（低解像度化）---
 const RENDER_SCALE = 0.4; // 小さいほど荒くなる
@@ -63,6 +65,17 @@ addWall(10, 0, 1, 20);
 addWall(-3, -3, 6, 1);
 addWall(4, 3, 1, 6);
 
+// --- 地下ピットへの階段エリア（視覚マーカー：暗い穴）---
+const pitCenter = new THREE.Vector3();
+PIT_STAIRS_BOX.getCenter(pitCenter);
+const pitMarker = new THREE.Mesh(
+  new THREE.PlaneGeometry(3, 4),
+  new THREE.MeshBasicMaterial({ color: 0x000000 })
+);
+pitMarker.rotation.x = -Math.PI / 2;
+pitMarker.position.set(pitCenter.x, 0.02, pitCenter.z);
+scene.add(pitMarker);
+
 // --- インタラクト対象 ---
 const interactableObjects = [];
 
@@ -79,8 +92,9 @@ phone.position.set(-9.4, 1.4, -6);
 scene.add(phone);
 interactableObjects.push(phone);
 
-// ガス検知器・鍵（床に落ちているアイテム）
-function spawnItem(name, color, x, z, size) {
+// ガス検知器・鍵（床に落ちているアイテム） — id は ITEM_NAMES のキー
+function spawnItem(id, color, x, z, size) {
+  const name = ITEM_NAMES[id] ?? id;
   const mesh = new THREE.Mesh(
     new THREE.BoxGeometry(...size),
     new THREE.MeshStandardMaterial({ color, roughness: 0.5 })
@@ -88,15 +102,15 @@ function spawnItem(name, color, x, z, size) {
   mesh.position.set(x, size[1] / 2, z);
   mesh.userData.prompt = `E: 拾う（${name}）`;
   mesh.userData.onInteract = (obj) => {
-    addItem(name);
+    addItem(id);
     scene.remove(obj);
     interactableObjects.splice(interactableObjects.indexOf(obj), 1);
   };
   scene.add(mesh);
   interactableObjects.push(mesh);
 }
-spawnItem('ガス検知器', 0x3a8f3a, 3, -6, [0.15, 0.25, 0.08]);
-spawnItem('鍵', 0xd4af37, -6, 6, [0.12, 0.03, 0.05]);
+spawnItem('gas_detector', 0x3a8f3a, 3, -6, [0.15, 0.25, 0.08]);
+spawnItem('key', 0xd4af37, -6, 6, [0.12, 0.03, 0.05]);
 
 // --- 電話UI ---
 const phoneUI = new PhoneUI({
@@ -111,6 +125,8 @@ const phoneUI = new PhoneUI({
   onClose: () => {
     gameState.phoneRinging = false;
     phone.userData.prompt = '(通話は終わった)';
+    // 通話完了をチェックポイントにする
+    saveCheckpoint('phone_done', camera.position);
   },
 });
 
@@ -167,6 +183,15 @@ const interaction = setupInteraction({
   phoneUI,
 });
 
+// --- GameOver / Events ---
+initGameOver({
+  // チェックポイントへ復帰（所持品・フラグは保持したまま）
+  onRestart: (cp) => {
+    camera.position.set(cp.position.x, cp.position.y, cp.position.z);
+  },
+});
+const events = setupEvents();
+
 // ポインタロック開始後（ユーザー操作後）に着信音を開始
 controls.controls.addEventListener('lock', () => {
   if (gameState.phoneRinging) startRingSound();
@@ -184,6 +209,13 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   controls.update(Math.min(clock.getDelta(), 0.05));
+
+  // プレイヤー位置を状態に反映
+  playerState.position.x = camera.position.x;
+  playerState.position.y = camera.position.y;
+  playerState.position.z = camera.position.z;
+
+  events.update();
   interaction.update();
 
   // 着信中は電話機を赤く点滅
